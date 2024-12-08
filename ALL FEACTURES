@@ -1,0 +1,164 @@
+import time
+import random
+import pyttsx3
+
+# Initialize text-to-speech engine
+engine = pyttsx3.init()
+engine.setProperty("rate", 150)
+
+# Global variables
+sdss_active = False
+cruise_control_active = False
+parking_lights_on = False
+weather_condition = "clear"
+water_on_tires = False
+driver_fatigued = False
+panic_button_contacts = ["123-456-7890", "987-654-3210", "555-555-5555"]
+
+# Functions for alerts and dashboard updates
+def speak(message):
+    """Speak and display a message."""
+    print(f"ALERT: {message}")
+    engine.say(message)
+    engine.runAndWait()
+
+def display_dashboard(message):
+    """Display dashboard updates."""
+    print(f"DASHBOARD: {message}")
+
+# Simulated detection functions
+def detect_weather():
+    """Simulate weather condition detection."""
+    weather_conditions = ["clear", "rain", "heavy rain", "flash flood"]
+    return random.choice(weather_conditions)
+
+def detect_water_on_tires():
+    """Simulate water detection on tires."""
+    return random.choice([True, False])
+
+def detect_driver_fatigue():
+    """Simulate driver fatigue detection."""
+    return random.choice([True, False])
+
+def detect_traffic_signal():
+    """Simulate traffic signal detection."""
+    signals = ["red", "yellow", "green"]
+    return random.choice(signals)
+
+# Feature implementations
+def handle_cruise_control():
+    """Manage cruise control behavior."""
+    global cruise_control_active, parking_lights_on
+    if cruise_control_active:
+        if weather_condition in ["rain", "heavy rain", "flash flood"] or water_on_tires:
+            cruise_control_active = False
+            parking_lights_on = False
+            speak("Cruise control deactivated due to adverse conditions. Parking lights turned off.")
+        else:
+            speak("Cruise control active. Maintaining safe distance from the car ahead.")
+    else:
+        if weather_condition in ["rain", "heavy rain", "flash flood"] or water_on_tires:
+            speak("Conditions unsafe. Cruise control cannot be turned on.")
+        else:
+            cruise_control_active = True
+            parking_lights_on = True
+            speak("Cruise control activated. Parking lights turned on.")
+
+def handle_parking_lights():
+    """Control parking lights based on weather or hydroplaning conditions."""
+    global parking_lights_on
+    if weather_condition in ["rain", "heavy rain", "flash flood"] or water_on_tires:
+        if not parking_lights_on:
+            parking_lights_on = True
+            speak("Parking lights activated due to adverse weather conditions.")
+    else:
+        if parking_lights_on:
+            parking_lights_on = False
+            speak("Parking lights deactivated as conditions are clear.")
+
+def hydroplaning_detection():
+    """Handle hydroplaning alerts."""
+    if water_on_tires:
+        speak("Water detected on tires. Hydroplaning risk! Reduce speed.")
+    else:
+        speak("No hydroplaning risk detected.")
+
+def driver_fatigue_monitoring():
+    """Monitor and alert driver fatigue."""
+    if driver_fatigued:
+        speak("You seem fatigued. Please take a break for your safety.")
+    else:
+        speak("Driver is alert.")
+
+def panic_button_pressed():
+    """Handle panic button activation."""
+    speak("Panic button pressed! Sending SOS messages to emergency contacts.")
+    for contact in panic_button_contacts:
+        display_dashboard(f"Emergency message sent to {contact}.")
+
+def traffic_signal_detection():
+    """Monitor traffic signals and alert driver."""
+    signal = detect_traffic_signal()
+    if signal == "red":
+        speak("Red traffic signal detected. Please stop.")
+    elif signal == "yellow":
+        speak("Yellow signal detected. Prepare to stop.")
+    elif signal == "green":
+        speak("Green signal detected. You may proceed.")
+    display_dashboard(f"Traffic Signal: {signal.capitalize()}")
+
+def handle_weather():
+    """Handle weather alerts."""
+    if weather_condition == "rain":
+        speak("Weather Alert: Rain detected. Please drive carefully.")
+    elif weather_condition == "heavy rain":
+        speak("Weather Alert: Heavy rain detected. Drive with caution.")
+    elif weather_condition == "flash flood":
+        speak("Weather Alert: Flash flood detected. Activate flood mode for safety.")
+
+# Main loop
+def main():
+    global sdss_active, weather_condition, water_on_tires, driver_fatigued
+    print("Welcome to SmartDrive Safety System (SDSS)")
+
+    while True:
+        if not sdss_active:
+            option = input("Enter '1' to activate SDSS, '2' to quit: ").strip()
+            if option == '1':
+                sdss_active = True
+                speak("SDSS is now activated. Monitoring features...")
+            elif option == '2':
+                speak("Exiting SDSS. Drive safely!")
+                break
+        else:
+            # Simulate real-time conditions
+            weather_condition = detect_weather()
+            water_on_tires = detect_water_on_tires()
+            driver_fatigued = detect_driver_fatigue()
+
+            # Display conditions and trigger features
+            speak(f"Weather condition detected: {weather_condition.capitalize()}.")
+            display_dashboard(f"Weather: {weather_condition.capitalize()}, Water on Tires: {'Yes' if water_on_tires else 'No'}")
+
+            # Handle parking lights
+            handle_parking_lights()
+
+            # Check cruise control behavior
+            handle_cruise_control()
+
+            # Check hydroplaning risk
+            hydroplaning_detection()
+
+            # Monitor driver fatigue
+            driver_fatigue_monitoring()
+
+            # Monitor traffic signals
+            traffic_signal_detection()
+
+            # Handle weather-specific alerts
+            handle_weather()
+
+            time.sleep(5)  # Simulated monitoring delay
+
+if __name__ == "__main__":
+    main()
