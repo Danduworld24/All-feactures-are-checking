@@ -1,0 +1,212 @@
+import asyncio
+import random
+import pyttsx3
+import nest_asyncio
+
+# Allow nested event loops in Jupyter or interactive environments
+nest_asyncio.apply()
+
+# Initialize text-to-speech engine
+engine = pyttsx3.init()
+engine.setProperty("rate", 150)
+
+# Global Variables
+sdss_active = False
+cruise_control_active = False
+parking_lights_on = False
+flood_mode_active = False
+blind_spot_detected = False
+emergency_brake_active = False
+weather_condition = "clear"
+water_on_tires = False
+driver_fatigued = False
+traffic_signal = "green"
+vehicle_speed = 50  # In km/h
+panic_button_contacts = ["123-456-7890", "987-654-3210", "555-555-5555"]
+
+# Functions for Alerts and Dashboard Updates
+def speak(message):
+    """Speak and display a message."""
+    print(f"ALERT: {message}")
+    engine.say(message)
+    engine.runAndWait()
+
+def display_dashboard(message):
+    """Display dashboard updates."""
+    print(f"DASHBOARD: {message}")
+
+# Simulated Detection Functions
+async def detect_weather():
+    global weather_condition
+    weather_conditions = ["clear", "rain", "heavy rain", "flash flood"]
+    weather_condition = random.choice(weather_conditions)
+    await asyncio.sleep(1)
+
+async def detect_water_on_tires():
+    global water_on_tires
+    water_on_tires = random.choice([True, False])
+    await asyncio.sleep(1)
+
+async def detect_driver_fatigue():
+    global driver_fatigued
+    driver_fatigued = random.choice([True, False])
+    await asyncio.sleep(1)
+
+async def detect_traffic_signal():
+    global traffic_signal
+    signals = ["red", "yellow", "green"]
+    traffic_signal = random.choice(signals)
+    await asyncio.sleep(1)
+
+async def monitor_speed():
+    global vehicle_speed
+    vehicle_speed = random.randint(30, 120)  # Simulate speed in km/h
+    await asyncio.sleep(1)
+
+async def detect_blind_spot():
+    global blind_spot_detected
+    blind_spot_detected = random.choice([True, False])
+    await asyncio.sleep(1)
+
+# Feature Implementations
+async def handle_cruise_control():
+    global cruise_control_active
+    if cruise_control_active:
+        if weather_condition in ["rain", "heavy rain", "flash flood"] or water_on_tires:
+            cruise_control_active = False
+            speak("Cruise control deactivated due to adverse conditions.")
+        else:
+            speak("Cruise control active. Maintaining safe distance from the car ahead.")
+    else:
+        if weather_condition not in ["rain", "heavy rain", "flash flood"] and not water_on_tires:
+            cruise_control_active = True
+            speak("Cruise control activated.")
+        else:
+            speak("Conditions unsafe. Cruise control cannot be turned on.")
+
+async def handle_parking_lights():
+    global parking_lights_on
+    if weather_condition in ["rain", "heavy rain", "flash flood"] or water_on_tires:
+        if not parking_lights_on:
+            parking_lights_on = True
+            speak("Parking lights activated due to adverse weather conditions.")
+    else:
+        if parking_lights_on:
+            parking_lights_on = False
+            speak("Parking lights deactivated as conditions are clear.")
+
+async def hydroplaning_detection():
+    if water_on_tires:
+        speak("Water detected on tires. Hydroplaning risk! Reduce speed.")
+    else:
+        speak("No hydroplaning risk detected.")
+
+async def driver_fatigue_monitoring():
+    if driver_fatigued:
+        speak("You seem fatigued. Please take a break for your safety.")
+    else:
+        speak("Driver is alert.")
+
+async def panic_button_pressed():
+    speak("Panic button pressed! Sending SOS messages to emergency contacts.")
+    for contact in panic_button_contacts:
+        display_dashboard(f"Emergency message sent to {contact}.")
+
+async def traffic_signal_detection():
+    if traffic_signal == "red":
+        speak("Red traffic signal detected. Please stop.")
+    elif traffic_signal == "yellow":
+        speak("Yellow signal detected. Prepare to stop.")
+    elif traffic_signal == "green":
+        speak("Green signal detected. You may proceed.")
+    display_dashboard(f"Traffic Signal: {traffic_signal.capitalize()}")
+
+async def handle_weather():
+    if weather_condition == "rain":
+        speak("Weather Alert: Rain detected. Please drive carefully.")
+    elif weather_condition == "heavy rain":
+        speak("Weather Alert: Heavy rain detected. Drive with caution.")
+    elif weather_condition == "flash flood":
+        speak("Weather Alert: Flash flood detected. Activate flood mode for safety.")
+
+async def flood_mode_activation():
+    global flood_mode_active
+    if weather_condition == "flash flood" and not flood_mode_active:
+        flood_mode_active = True
+        speak("Flood mode activated. Adjusting vehicle for safer driving in flooded conditions.")
+    elif flood_mode_active and weather_condition != "flash flood":
+        flood_mode_active = False
+        speak("Flood mode deactivated as conditions have improved.")
+
+async def monitor_safety_distance():
+    safety_distance = random.randint(1, 50)
+    if safety_distance < 10:
+        speak(f"Warning! Unsafe distance detected: {safety_distance} meters. Maintain a safe gap.")
+    else:
+        speak(f"Safe distance maintained: {safety_distance} meters.")
+
+async def speed_monitoring():
+    global vehicle_speed
+    if vehicle_speed > 80 and weather_condition in ["rain", "heavy rain", "flash flood"]:
+        speak(f"Slow down! Your speed is {vehicle_speed} km/h, which is unsafe for current conditions.")
+    else:
+        speak(f"Your speed is {vehicle_speed} km/h. Drive safely.")
+
+async def blind_spot_monitoring():
+    if blind_spot_detected:
+        speak("Warning! Vehicle or obstacle detected in your blind spot.")
+    else:
+        speak("Blind spot clear.")
+
+async def emergency_brake_assistance():
+    collision_risk = random.choice([True, False])
+    if collision_risk:
+        speak("Collision risk detected! Activating emergency brakes.")
+    else:
+        speak("No collision risk detected.")
+
+# Main Monitoring Loop
+async def monitor_sdss():
+    global sdss_active
+    print("Welcome to SmartDrive Safety System (SDSS)")
+
+    while True:
+        if not sdss_active:
+            option = input("Enter '1' to activate SDSS, '2' to quit: ").strip()
+            if option == '1':
+                sdss_active = True
+                speak("SDSS is now activated. Monitoring features...")
+            elif option == '2':
+                speak("Exiting SDSS. Drive safely!")
+                break
+        else:
+            await asyncio.gather(
+                detect_weather(),
+                detect_water_on_tires(),
+                detect_driver_fatigue(),
+                detect_traffic_signal(),
+                monitor_speed(),
+                detect_blind_spot()
+            )
+
+            if not sdss_active:
+                break  # Exit loop immediately if SDSS is deactivated.
+
+            await asyncio.gather(
+                handle_parking_lights(),
+                handle_cruise_control(),
+                hydroplaning_detection(),
+                driver_fatigue_monitoring(),
+                traffic_signal_detection(),
+                handle_weather(),
+                flood_mode_activation(),
+                monitor_safety_distance(),
+                speed_monitoring(),
+                blind_spot_monitoring(),
+                emergency_brake_assistance()
+            )
+
+            await asyncio.sleep(5)
+
+# Run the SDSS system
+await monitor_sdss()
